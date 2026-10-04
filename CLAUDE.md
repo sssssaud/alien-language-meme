@@ -21,6 +21,6 @@ HTML/CSS/JS, no libraries, works offline from `file://`. Node 22 only for `test.
 - Test: `node test.js`
 
 ## Current status
-- Done: v1 translator page, both directions, tests pass.
+- Done: v1 translator page, both directions, tests pass. Public: https://github.com/sssssaud/alien-language-meme, live at https://sssssaud.github.io/alien-language-meme/
 - Pending: options in PROGRESS.md → "Next", Saud picks.
 - Blockers: none.

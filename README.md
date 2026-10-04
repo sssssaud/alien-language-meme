@@ -2,7 +2,9 @@
 
 Type English, get alien. Type alien, get English. Based on the "ALIEN LANGUAGE" meme (`images.jpeg`).
 
-**Run:** open `index.html` in any browser. No install, works offline.
+**Try it live:** https://sssssaud.github.io/alien-language-meme/
+
+**Run locally:** open `index.html` in any browser. No install, works offline.
 
 ## How the language works
 1. **Meme words** keep the meme's exact translation: `hello` = `zap zup`, `friend` = `vip vop`, `I don't know` = `zab zup`, …
