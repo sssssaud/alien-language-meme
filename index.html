@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alien Translator</title>
+<style>
+  :root {
+    --bg: #070b08; --panel: #0f1a12; --line: #24402a;
+    --text: #d8f5dc; --muted: #8fb397; --alien: #8dff6a;
+  }
+  body {
+    margin: 0; color: var(--text);
+    background: radial-gradient(circle at 50% -20%, #12301a, var(--bg) 60%) fixed var(--bg);
+    font: 16px/1.5 system-ui, sans-serif;
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { margin: 0; color: var(--alien); text-shadow: 0 0 18px #8dff6a55; font-size: clamp(2rem, 6vw, 3.2rem); }
+  h2 { font-size: 1.1rem; margin: 36px 0 4px; }
+  p { margin: 4px 0 12px; color: var(--muted); }
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 20px; }
+  label { display: block; margin-bottom: 6px; color: var(--muted); font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  textarea {
+    width: 100%; box-sizing: border-box; min-height: 180px; resize: vertical; padding: 14px;
+    background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+    font: inherit; font-size: 1.1rem;
+  }
+  #al, dd { color: var(--alien); font-family: ui-monospace, monospace; }
+  textarea:focus-visible { outline: 2px solid var(--alien); outline-offset: 2px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 0; }
+  .grid div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  dt { color: var(--muted); font-size: .85rem; }
+  dd { margin: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>👽 Alien Language</h1>
+  <p>Type in either box. It translates both ways.</p>
+
+  <div class="pair">
+    <div><label for="en">English</label><textarea id="en"></textarea></div>
+    <div><label for="al">Alien</label><textarea id="al" spellcheck="false"></textarea></div>
+  </div>
+
+  <h2>Meme words</h2>
+  <p>These come straight from the meme.</p>
+  <dl class="grid" id="dict"></dl>
+
+  <h2>Alien alphabet</h2>
+  <p>Every other word is spelled with one syllable per letter, so all of English works.</p>
+  <dl class="grid" id="abc"></dl>
+</main>
+
+<script id="alien">
+// Meme phrases use the meme's exact words; every other word is spelled one syllable per letter.
+const PHRASES = {
+  "I don't know": "zab zup",
+  "I want": "zap",
+  "love you": "zib zub zab",
+  "hello": "zap zup",
+  "skibidi": "zibzidi",
+  "good": "zap zub",
+  "goodnight": "zeb zab zab",
+  "good morning": "zeb zab zib",
+  "same": "zab zab",
+  "okay": "blab",
+  "yes": "zib",
+  "no": "bleb bleb",
+  "can": "zob zep",
+  "friend": "vip vop",
+};
+// a..z. All 3 letters long so a spelled word splits back cleanly; none clash with a meme word.
+const LETTERS = "zop bab vub zed zip bep vad bup zid vep bod bip vob zod zud bub vud bop zad bib vap vib beb ved vid vod".split(" ");
+const SYLLABLE = new Map(LETTERS.map((s, i) => [s, String.fromCharCode(97 + i)]));
+
+function makeTranslator(pairs, spell) {
+  const table = new Map(pairs.map(([from, to]) => [from.toLowerCase(), to]));
+  // Longest phrase first so "zap zup" wins over "zap"; anything else is a plain run of letters.
+  const alts = [...table.keys()].sort((a, b) => b.length - a.length).map(k => k.replace(/ /g, "\\s+"));
+  const re = new RegExp(`\\b(?:${alts.join("|")})\\b|[a-z]+`, "gi");
+  return text => text.replace(/’/g, "'").replace(re, m => {
+    const key = m.toLowerCase().replace(/\s+/g, " ");
+    const out = table.get(key) ?? spell(key) ?? m;
+    return /[A-Z]/.test(m[0]) ? out[0].toUpperCase() + out.slice(1) : out;
+  });
+}
+
+const toAlien = makeTranslator(Object.entries(PHRASES),
+  w => [...w].map(c => LETTERS[c.charCodeAt(0) - 97]).join(""));
+
+const toEnglish = makeTranslator(Object.entries(PHRASES).map(([en, al]) => [al, en]), w => {
+  const parts = w.match(/.{3}/g);
+  // Not a valid spelled word: undefined keeps it as typed.
+  return w.length % 3 === 0 && parts.every(p => SYLLABLE.has(p)) ? parts.map(p => SYLLABLE.get(p)).join("") : undefined;
+});
+</script>
+
+<script>
+const en = document.getElementById("en");
+const al = document.getElementById("al");
+en.addEventListener("input", () => { al.value = toAlien(en.value); });
+al.addEventListener("input", () => { en.value = toEnglish(al.value); });
+en.value = "Hello friend! I want pizza. Good morning, I don't know.";
+al.value = toAlien(en.value);
+
+function fill(id, pairs) {
+  const dl = document.getElementById(id);
+  for (const [term, alien] of pairs) {
+    const row = document.createElement("div");
+    row.append(Object.assign(document.createElement("dt"), { textContent: term }),
+               Object.assign(document.createElement("dd"), { textContent: alien }));
+    dl.append(row);
+  }
+}
+fill("dict", Object.entries(PHRASES));
+fill("abc", LETTERS.map((s, i) => [String.fromCharCode(97 + i), s]));
+</script>
+</body>
+</html>
